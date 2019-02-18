@@ -39,7 +39,7 @@ int main(){
     }
     OCIAttrSet((dvoid*)svcCtxhp,OCI_HTYPE_SVCCTX,(dvoid*)sessionhp,(ub4)0,OCI_ATTR_SESSION,errhp);
     OCIHandleAlloc((dvoid*)envhp,(dvoid**)&stmthp,OCI_HTYPE_STMT,0,(dvoid**)0);
-    OraText* sql =(OraText*) "select to_char(sysdate,'yyyy-mm-dd hh24:mi:ss') from dual";
+    OraText* sql =(OraText*) "select sysdate from dual";
     text out[1024];
     OCIStmtPrepare(stmthp,errhp,sql,(ub4)strlen(sql),(ub4)OCI_NTV_SYNTAX,(ub4)OCI_DEFAULT);
     OCIDefineByPos(stmthp,&outParam,errhp,1,(dvoid*)out,1024*sizeof(char),SQLT_STR,(dvoid*)0,(ub2*)0,(ub2*)0,OCI_DEFAULT);
