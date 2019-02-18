@@ -13,6 +13,8 @@ int main(){
     OCIError* errhp;
     OCISession* sessionhp;
     OCISvcCtx* svcCtxhp;
+    OCIStmt* stmthp;
+    OCIDefine* outParam = (OCIDefine*) 0;
     OCIEnvCreate(&envhp,OCI_THREADED|OCI_OBJECT,(dvoid*)0,0,0,0,(size_t)0,(dvoid**)0);
     OCIHandleAlloc((dvoid*)envhp,(dvoid**)&servhp,OCI_HTYPE_SERVER,0,(dvoid**)0);
     OCIAttrSet((dvoid*)servhp,OCI_HTYPE_SERVER,(dvoid*)"FALSE",(ub4)0,OCI_ATTR_NONBLOCKING_MODE,errhp);
@@ -36,8 +38,15 @@ int main(){
         return -1;
     }
     OCIAttrSet((dvoid*)svcCtxhp,OCI_HTYPE_SVCCTX,(dvoid*)sessionhp,(ub4)0,OCI_ATTR_SESSION,errhp);
-    OCISessionEnd(svcCtxhp,errhp,sessionhp,OCI_DEFAULT);
-    OCIServerDetach(servhp,errhp,OCI_DEFAULT);
-    OCIHandleFree((dvoid*)envhp,OCI_HTYPE_ENV);
+    OCIHandleAlloc((dvoid*)envhp,(dvoid**)&stmthp,OCI_HTYPE_STMT,0,(dvoid**)0);
+    OraText* sql =(OraText*) "select to_char(sysdate,'yyyy-mm-dd hh24:mi:ss') from dual";
+    text out[1024];
+    OCIStmtPrepare(stmthp,errhp,sql,(ub4)strlen(sql),(ub4)OCI_NTV_SYNTAX,(ub4)OCI_DEFAULT);
+    OCIDefineByPos(stmthp,&outParam,errhp,1,(dvoid*)out,1024*sizeof(char),SQLT_STR,(dvoid*)0,(ub2*)0,(ub2*)0,OCI_DEFAULT);
+    OCIStmtExecute(svcCtxhp,stmthp,errhp,(ub4)1,(ub4)0,(CONST OCISnapshot*)0,(OCISnapshot*)0,OCI_DEFAULT);
+    printf("%s\n",out);
+    OCISessionEnd(svcCtxhp,errhp,sessionhp,OCI_DEFAULT); //结束会话
+    OCIServerDetach(servhp,errhp,OCI_DEFAULT);  //断开连接
+    OCIHandleFree((dvoid*)envhp,OCI_HTYPE_ENV); //释放句柄
     return 0;
 }
