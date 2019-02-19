@@ -7,6 +7,16 @@
 #include<stdlib.h>
 #include<oci.h>
 
+void printError(OCIError* errhp){
+    ub4 errcode;
+    text errbuff[1024];
+    OCIErrorGet((dvoid*)errhp,(ub4)1,(text*)NULL,&errcode,errbuff,(ub4)sizeof(errbuff),(ub4)OCI_HTYPE_ERROR);
+    if(strlen(errbuff)!=0){
+        printf("%d\n",errcode);
+        printf("%s\n",errbuff);
+    }
+    return;
+}
 int main(){
     OCIEnv* envhp;
     OCIServer* servhp;
@@ -14,7 +24,6 @@ int main(){
     OCISession* sessionhp;
     OCISvcCtx* svcCtxhp;
     OCIStmt* stmthp;
-    OCIDefine* outParam = (OCIDefine*) 0;
     OCIEnvCreate(&envhp,OCI_THREADED|OCI_OBJECT,(dvoid*)0,0,0,0,(size_t)0,(dvoid**)0);
     OCIHandleAlloc((dvoid*)envhp,(dvoid**)&servhp,OCI_HTYPE_SERVER,0,(dvoid**)0);
     OCIAttrSet((dvoid*)servhp,OCI_HTYPE_SERVER,(dvoid*)"FALSE",(ub4)0,OCI_ATTR_NONBLOCKING_MODE,errhp);
@@ -39,14 +48,33 @@ int main(){
     }
     OCIAttrSet((dvoid*)svcCtxhp,OCI_HTYPE_SVCCTX,(dvoid*)sessionhp,(ub4)0,OCI_ATTR_SESSION,errhp);
     OCIHandleAlloc((dvoid*)envhp,(dvoid**)&stmthp,OCI_HTYPE_STMT,0,(dvoid**)0);
-    OraText* sql =(OraText*) "select sysdate from dual";
-    text out[1024];
+    //OraText* sql = (OraText*) "select * from oci";
+    text* sql =(text*) "insert into oci values(:1,:2)";
+    OCIBind* bndhp1 = NULL;
+    OCIBind* bndhp2 = NULL;
+    char* str = "0002";
     OCIStmtPrepare(stmthp,errhp,sql,(ub4)strlen(sql),(ub4)OCI_NTV_SYNTAX,(ub4)OCI_DEFAULT);
-    OCIDefineByPos(stmthp,&outParam,errhp,1,(dvoid*)out,1024*sizeof(char),SQLT_STR,(dvoid*)0,(ub2*)0,(ub2*)0,OCI_DEFAULT);
+    OCIBindByPos(stmthp,&bndhp1,errhp,1,(void*)str,(sb4)strlen(str)+1,SQLT_STR,(void*)0,(ub2*)0,(ub2*)0,(ub4)0,(ub4*)0,OCI_DEFAULT);
+    OCIBindByPos(stmthp,&bndhp2,errhp,2,(void*)str,(sb4)strlen(str)+1,SQLT_STR,(void*)0,(ub2*)0,(ub2*)0,(ub4)0,(ub4*)0,OCI_DEFAULT);
+    //OCIBindByName(stmthp,&bndhp2,errhp,(text*)":userName",strlen(":userName"),(void*)str,(sb4)strlen(str)+1,SQLT_STR,(void*)0,(ub2*)0,(ub2*)0,(ub4)0,(ub4*)0,OCI_DEFAULT);
+    //OCIBindByName(stmthp,&bndhp2,errhp,(text*)":tip",strlen(":tip"),(void*)str,(sb4)strlen(str)+1,SQLT_STR,(void*)0,(ub2*)0,(ub2*)0,(ub4)0,(ub4*)0,OCI_DEFAULT);
+    //char param1[1024],param2[1024];
+    //OCIDefine* define1 = NULL;
+    //OCIDefine* define2 = NULL;
+    //OCIDefineByPos(stmthp,&define1,errhp,1,(void*)param1,(sb4)1024*sizeof(char),SQLT_STR,(dvoid*)0,(ub2*)0,(ub2*)0,OCI_DEFAULT);
+    //OCIDefineByPos(stmthp,&define2,errhp,2,(void*)param2,(sb4)1024*sizeof(char),SQLT_STR,(dvoid*)0,(ub2*)0,(ub2*)0,OCI_DEFAULT);
+    //OCITransStart(svcCtxhp,errhp,30,OCI_TRANS_NEW);
     OCIStmtExecute(svcCtxhp,stmthp,errhp,(ub4)1,(ub4)0,(CONST OCISnapshot*)0,(OCISnapshot*)0,OCI_DEFAULT);
-    printf("%s\n",out);
+    sword status = OCITransCommit(svcCtxhp,errhp,OCI_DEFAULT);
+    if(status == OCI_SUCCESS)
+        printf("事务提交成功\n");
+    //OCITransRollback(svcCtxhp,errhp,OCI_DEFAULT);
+    //while(OCIStmtFetch2(stmthp,errhp,1,OCI_DEFAULT,0,OCI_DEFAULT)!=OCI_NO_DATA){
+    //    printf("%s %s\n",param1,param2);
+    //}
     OCISessionEnd(svcCtxhp,errhp,sessionhp,OCI_DEFAULT); //结束会话
     OCIServerDetach(servhp,errhp,OCI_DEFAULT);  //断开连接
     OCIHandleFree((dvoid*)envhp,OCI_HTYPE_ENV); //释放句柄
     return 0;
 }
+
