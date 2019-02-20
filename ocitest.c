@@ -24,6 +24,12 @@ int main(){
     OCISession* sessionhp;
     OCISvcCtx* svcCtxhp;
     OCIStmt* stmthp;
+    if(OCIInitialize(OCI_DEFAULT,0,0,0,0) == OCI_SUCCESS){
+        printf("oci init success\n");
+    }else{
+        printf("oci init failed\n");
+        exit(1);
+    }
     OCIEnvCreate(&envhp,OCI_THREADED|OCI_OBJECT,(dvoid*)0,0,0,0,(size_t)0,(dvoid**)0);
     OCIHandleAlloc((dvoid*)envhp,(dvoid**)&servhp,OCI_HTYPE_SERVER,0,(dvoid**)0);
     OCIAttrSet((dvoid*)servhp,OCI_HTYPE_SERVER,(dvoid*)"FALSE",(ub4)0,OCI_ATTR_NONBLOCKING_MODE,errhp);
@@ -68,6 +74,11 @@ int main(){
     sword status = OCITransCommit(svcCtxhp,errhp,OCI_DEFAULT);
     if(status == OCI_SUCCESS)
         printf("事务提交成功\n");
+    if(OCIThreadIsMulti() != 0){
+        printf("处于多线程环境\n");
+    }else{
+        printf("处于单线程环境\n");
+    }
     //OCITransRollback(svcCtxhp,errhp,OCI_DEFAULT);
     //while(OCIStmtFetch2(stmthp,errhp,1,OCI_DEFAULT,0,OCI_DEFAULT)!=OCI_NO_DATA){
     //    printf("%s %s\n",param1,param2);
