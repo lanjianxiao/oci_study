@@ -32,8 +32,8 @@ int main(){
     }
     OCIEnvCreate(&envhp,OCI_THREADED|OCI_OBJECT,(dvoid*)0,0,0,0,(size_t)0,(dvoid**)0);
     OCIHandleAlloc((dvoid*)envhp,(dvoid**)&servhp,OCI_HTYPE_SERVER,0,(dvoid**)0);
-    OCIAttrSet((dvoid*)servhp,OCI_HTYPE_SERVER,(dvoid*)"FALSE",(ub4)0,OCI_ATTR_NONBLOCKING_MODE,errhp);
     OCIHandleAlloc((dvoid*)envhp,(dvoid**)&errhp,OCI_HTYPE_ERROR,0,(dvoid**)0);
+    OCIAttrSet((dvoid*)servhp,OCI_HTYPE_SERVER,(dvoid*)"FALSE",(ub4)0,OCI_ATTR_NONBLOCKING_MODE,errhp);
     if(OCIServerAttach(servhp,errhp,"192.168.100.40:1521/dbutf",strlen("192.168.100.40:1521/dbutf"),OCI_DEFAULT)==OCI_SUCCESS){
         printf("connect oracle server success\n");
     }
